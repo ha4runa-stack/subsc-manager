@@ -39,9 +39,9 @@
   - テスト: VercelのURLで画面が表示される
 
 #### フェーズ1: 基盤（Supabase・ログイン）
-- [ ] **1-1 Supabaseプロジェクトと環境変数** — URLとキーを `.env.local` に書く
+- [x] **1-1 Supabaseプロジェクトと環境変数** — URLとキーを `.env.local` に書く
   - テスト: `git status` に `.env.local` が出てこない
-- [ ] **1-2 subscriptionsテーブルとRLS** — 「3. データベース構成」のSQLを実行する
+- [x] **1-2 subscriptionsテーブルとRLS** — 「3. データベース構成」のSQLを実行する
   - テスト: Table Editorでテーブルが見え、RLSが Enabled になっている
 - [ ] **1-3 Supabaseへの接続ファイル** — `@supabase/ssr` でブラウザ用とサーバー用を作る
   - テスト: 仮のページでテーブルを読み込んでもエラーが出ない
