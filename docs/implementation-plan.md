@@ -71,7 +71,7 @@
   - テスト: 解約済み側に移り、元に戻せる。`cancelled_at` に日付が入る
 
 #### フェーズ3: 計算ロジック（`src/lib/calculations.ts`）
-- [ ] **3-1 Vitestの導入**
+- [x] **3-1 Vitestの導入**
   - テスト: `npm test` でサンプルテストが通る
 - [ ] **3-2 1件ごとの計算** — `toMonthlyAmount` / `toYearlyAmount`
   - テスト（自動）:
