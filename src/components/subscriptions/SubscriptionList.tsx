@@ -9,6 +9,7 @@ import { getSubscriptions } from "@/lib/subscriptions";
 import { DeleteButton } from "./DeleteButton";
 import { StatusToggleButton } from "./StatusToggleButton";
 import { formatDate, formatYen } from "@/lib/format";
+import { toMonthlyAmount, toYearlyAmount } from "@/lib/calculations";
 import {
   getBillingDateStatus,
   getTodayInTokyo,
@@ -167,13 +168,20 @@ function CardHeader({ subscription }: { subscription: Subscription }) {
           {USAGE_STATUS_LABELS[subscription.usage_status]}
         </span>
       </div>
-      <p className="text-lg font-bold">
-        {formatYen(subscription.price)}
-        <span className="text-sm font-normal text-gray-500">
-          {" "}
-          / {BILLING_CYCLE_UNITS[subscription.billing_cycle]}
-        </span>
-      </p>
+      {/* 料金（大きく）と、計算した月額換算額・年間支出額（小さく） */}
+      <div className="text-right">
+        <p className="text-lg font-bold">
+          {formatYen(subscription.price)}
+          <span className="text-sm font-normal text-gray-500">
+            {" "}
+            / {BILLING_CYCLE_UNITS[subscription.billing_cycle]}
+          </span>
+        </p>
+        <p className="text-xs text-gray-500">
+          月額換算 {formatYen(toMonthlyAmount(subscription))} ／ 年間{" "}
+          {formatYen(toYearlyAmount(subscription))}
+        </p>
+      </div>
     </div>
   );
 }
