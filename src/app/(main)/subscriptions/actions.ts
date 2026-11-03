@@ -1,9 +1,9 @@
 // =====================================================================
 // サブスクの登録・更新・削除の処理（Server Action）
-// 今は「登録」だけ。更新は2-5、削除は2-6で追加する。
 // =====================================================================
 "use server";
 
+import { refresh } from "next/cache";
 import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import {
@@ -72,4 +72,82 @@ export async function createSubscription(
 
   // 4. 成功したら一覧へ
   redirect("/subscriptions");
+}
+
+// ---------------------------------------------------------------------
+// 更新
+// 編集画面で updateSubscription.bind(null, id) として id を先に渡しておく。
+// （bind：引数の一部をあらかじめ決めた、新しい関数を作る仕組み）
+// ---------------------------------------------------------------------
+export async function updateSubscription(
+  id: string,
+  _prevState: SubscriptionFormState,
+  formData: FormData,
+): Promise<SubscriptionFormState> {
+  const values = readForm(formData);
+
+  // 1. 入力チェック
+  const result = validateSubscription(values);
+  if (!result.success) {
+    return { values, errors: result.errors, message: null };
+  }
+
+  // 2. ログインしているか確認
+  const supabase = await createClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+  if (!user) {
+    redirect("/login");
+  }
+
+  // 3. 更新（RLS により、自分のデータしか更新できない）
+  //    .select("id") で、実際に更新できた行を受け取る
+  const { data, error } = await supabase
+    .from("subscriptions")
+    .update(result.data)
+    .eq("id", id)
+    .select("id");
+
+  if (error) {
+    return {
+      values,
+      errors: {},
+      message: "保存に失敗しました。時間をおいてもう一度お試しください。",
+    };
+  }
+  if (data.length === 0) {
+    // 削除済み、または他の人のデータだった場合
+    return {
+      values,
+      errors: {},
+      message: "このサブスクは見つかりませんでした。",
+    };
+  }
+
+  // 4. 成功したら一覧へ
+  redirect("/subscriptions");
+}
+
+// ---------------------------------------------------------------------
+// 削除
+// ---------------------------------------------------------------------
+export async function deleteSubscription(id: string): Promise<void> {
+  const supabase = await createClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+  if (!user) {
+    redirect("/login");
+  }
+
+  // RLS により、自分のデータしか削除できない
+  const { error } = await supabase.from("subscriptions").delete().eq("id", id);
+
+  if (error) {
+    throw new Error("削除に失敗しました。時間をおいてもう一度お試しください。");
+  }
+
+  // 画面を最新の状態に更新する（削除したカードが消える）
+  refresh();
 }

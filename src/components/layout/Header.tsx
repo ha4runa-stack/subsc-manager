@@ -3,8 +3,9 @@
 // アプリ名・ナビゲーション・ログアウトボタンを表示する
 // =====================================================================
 import Link from "next/link";
+import { Suspense } from "react";
 import { logout } from "@/app/auth/actions";
-import { NavLinks } from "./NavLinks";
+import { NavLinks, NavLinksPlaceholder } from "./NavLinks";
 
 export function Header() {
   return (
@@ -15,7 +16,10 @@ export function Header() {
         </Link>
 
         <div className="flex items-center gap-1 sm:gap-3">
-          <NavLinks />
+          {/* NavLinks は URL を読むので Suspense で囲む（URL はアクセス時に決まるため） */}
+          <Suspense fallback={<NavLinksPlaceholder />}>
+            <NavLinks />
+          </Suspense>
           <form action={logout}>
             <button
               type="submit"

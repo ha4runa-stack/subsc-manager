@@ -14,15 +14,27 @@ const links = [
   { href: "/subscriptions", label: "サブスク一覧" },
 ];
 
+// 今いるページに合わせて色を付けたリンク
 export function NavLinks() {
   const pathname = usePathname();
+  return <NavLinksView pathname={pathname} />;
+}
 
+// URL がまだ分からない間に表示する、色なしのリンク
+// （Header で <Suspense fallback={<NavLinksPlaceholder />}> として使う）
+export function NavLinksPlaceholder() {
+  return <NavLinksView pathname={null} />;
+}
+
+// 見た目の部分（pathname が null ならどれも選択中にしない）
+function NavLinksView({ pathname }: { pathname: string | null }) {
   return (
     <nav className="flex gap-1">
       {links.map((link) => {
         // /subscriptions/new なども「サブスク一覧」を選択中として扱う
         const isActive =
-          pathname === link.href || pathname.startsWith(`${link.href}/`);
+          pathname !== null &&
+          (pathname === link.href || pathname.startsWith(`${link.href}/`));
 
         return (
           <Link

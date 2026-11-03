@@ -2,7 +2,9 @@
 // サブスクの一覧（カード形式）
 // スマホでも見やすいように、表ではなくカードを縦に並べる。
 // =====================================================================
+import Link from "next/link";
 import { getSubscriptions } from "@/lib/subscriptions";
+import { DeleteButton } from "./DeleteButton";
 import { formatDate, formatYen } from "@/lib/format";
 import {
   BILLING_CYCLE_UNITS,
@@ -60,13 +62,24 @@ function SubscriptionCard({ subscription }: { subscription: Subscription }) {
         </p>
       </div>
 
-      {/* 次回請求日 */}
-      <p className="mt-2 text-sm text-gray-600">
-        次回請求日：
-        {subscription.next_billing_date
-          ? formatDate(subscription.next_billing_date)
-          : "未設定"}
-      </p>
+      {/* 下段：次回請求日と操作ボタン */}
+      <div className="mt-2 flex flex-wrap items-center justify-between gap-2">
+        <p className="text-sm text-gray-600">
+          次回請求日：
+          {subscription.next_billing_date
+            ? formatDate(subscription.next_billing_date)
+            : "未設定"}
+        </p>
+        <div className="flex gap-1">
+          <Link
+            href={`/subscriptions/${subscription.id}/edit`}
+            className="rounded-lg px-3 py-1.5 text-sm text-blue-600 hover:bg-blue-50"
+          >
+            編集
+          </Link>
+          <DeleteButton id={subscription.id} name={subscription.name} />
+        </div>
+      </div>
     </li>
   );
 }
