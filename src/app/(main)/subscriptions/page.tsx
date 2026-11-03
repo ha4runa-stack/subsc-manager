@@ -1,14 +1,17 @@
 // =====================================================================
 // サブスク一覧（/subscriptions）
-// 【今は仮の内容】中身はステップ2-2で作る。
 // =====================================================================
+import { Suspense } from "react";
+import { SubscriptionList } from "@/components/subscriptions/SubscriptionList";
+
 export default function SubscriptionsPage() {
   return (
     <>
       <h1 className="mb-4 text-2xl font-bold">サブスク一覧</h1>
-      <div className="rounded-xl bg-white p-6 text-gray-600 shadow-sm">
-        ここにサブスクの一覧が表示されます（準備中）。
-      </div>
+      {/* データの読み込み中は「読み込み中…」を表示する */}
+      <Suspense fallback={<p className="text-gray-500">読み込み中…</p>}>
+        <SubscriptionList />
+      </Suspense>
     </>
   );
 }
