@@ -4,9 +4,17 @@
 import { describe, expect, it } from "vitest";
 import {
   calcTotals,
+  getUnusedSubscriptions,
   toMonthlyAmount,
   toYearlyAmount,
 } from "@/lib/calculations";
+import type { Subscription } from "@/types/subscription";
+
+// テストで使う項目だけを持ったサブスクの型
+type TestSubscription = Pick<
+  Subscription,
+  "name" | "price" | "billing_cycle" | "usage_status" | "status"
+>;
 
 // 3-2：1件ごとの計算
 // 実装計画の表と同じ値を確かめる。
@@ -55,5 +63,32 @@ describe("calcTotals", () => {
 
   it("0件なら0円", () => {
     expect(calcTotals([])).toEqual({ monthly: 0, yearly: 0, count: 0 });
+  });
+});
+
+// 3-4：未使用サブスクの抽出
+describe("getUnusedSubscriptions", () => {
+  // テスト用データ（name はどれが残ったか確かめるための目印）
+  const subscriptions: TestSubscription[] = [
+    { name: "A", price: 980, billing_cycle: "monthly", usage_status: "often", status: "active" },
+    { name: "B", price: 500, billing_cycle: "monthly", usage_status: "sometimes", status: "active" },
+    { name: "C", price: 1200, billing_cycle: "monthly", usage_status: "unused", status: "active" },
+    { name: "D", price: 6000, billing_cycle: "yearly", usage_status: "unused", status: "active" },
+    { name: "E", price: 300, billing_cycle: "monthly", usage_status: "unused", status: "cancelled" },
+  ];
+
+  it("「よく使う」「たまに使う」「解約済み」は含まれない", () => {
+    const names = getUnusedSubscriptions(subscriptions).map((s) => s.name);
+    expect(names).toEqual(["C", "D"]);
+  });
+
+  it("未使用サブスクの金額も同じルールで計算できる", () => {
+    const totals = calcTotals(getUnusedSubscriptions(subscriptions));
+    // C：月額 1,200（年間 14,400）＋ D：年額 6,000（月額換算 500）
+    expect(totals).toEqual({ monthly: 1700, yearly: 20400, count: 2 });
+  });
+
+  it("未使用がなければ空の配列", () => {
+    expect(getUnusedSubscriptions([subscriptions[0]])).toEqual([]);
   });
 });
