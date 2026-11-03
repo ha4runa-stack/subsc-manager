@@ -32,3 +32,34 @@ export function toYearlyAmount(subscription: PriceInfo): number {
   }
   return subscription.price;
 }
+
+// ---------------------------------------------------------------------
+// 合計
+// ---------------------------------------------------------------------
+
+// 合計の計算に必要な項目（料金・契約周期に加えて、契約状況）
+type TotalInfo = Pick<Subscription, "price" | "billing_cycle" | "status">;
+
+// 合計の結果
+export type Totals = {
+  monthly: number; // 月額換算額の合計（円）
+  yearly: number; // 年間支出額の合計（円）
+  count: number; // 対象になったサブスクの件数
+};
+
+// 契約中のサブスクだけを対象に、月額・年間の合計を出す
+//   ・解約済みは含めない
+//   ・1件ずつ四捨五入してから足す（一覧の金額を足した値と必ず一致させるため）
+export function calcTotals(subscriptions: TotalInfo[]): Totals {
+  // filter … 条件に合うものだけを残した新しい配列を作る
+  const active = subscriptions.filter((s) => s.status === "active");
+
+  let monthly = 0;
+  let yearly = 0;
+  for (const s of active) {
+    monthly += toMonthlyAmount(s); // toMonthlyAmount の中で四捨五入済み
+    yearly += toYearlyAmount(s);
+  }
+
+  return { monthly, yearly, count: active.length };
+}

@@ -2,7 +2,11 @@
 // calculations.ts のテスト
 // =====================================================================
 import { describe, expect, it } from "vitest";
-import { toMonthlyAmount, toYearlyAmount } from "@/lib/calculations";
+import {
+  calcTotals,
+  toMonthlyAmount,
+  toYearlyAmount,
+} from "@/lib/calculations";
 
 // 3-2：1件ごとの計算
 // 実装計画の表と同じ値を確かめる。
@@ -21,4 +25,35 @@ describe("toMonthlyAmount / toYearlyAmount", () => {
       expect(toYearlyAmount(subscription)).toBe(yearly);
     },
   );
+});
+
+// 3-3：合計
+describe("calcTotals", () => {
+  it("契約中のサブスクを合計する", () => {
+    const totals = calcTotals([
+      { price: 980, billing_cycle: "monthly", status: "active" },
+      { price: 5900, billing_cycle: "yearly", status: "active" },
+    ]);
+    expect(totals).toEqual({ monthly: 980 + 492, yearly: 11760 + 5900, count: 2 });
+  });
+
+  it("解約済みを混ぜても合計は変わらない", () => {
+    const totals = calcTotals([
+      { price: 980, billing_cycle: "monthly", status: "active" },
+      { price: 5900, billing_cycle: "yearly", status: "cancelled" }, // 解約済み
+    ]);
+    // 契約中の 980 円の分だけになる
+    expect(totals).toEqual({ monthly: 980, yearly: 11760, count: 1 });
+  });
+
+  it("1件ずつ四捨五入してから足す", () => {
+    // 年額1,000円が3件：1件ごとだと 83 × 3 = 249 円
+    // （先に足してから割ると 3000 ÷ 12 = 250 円になってしまう）
+    const item = { price: 1000, billing_cycle: "yearly", status: "active" } as const;
+    expect(calcTotals([item, item, item]).monthly).toBe(249);
+  });
+
+  it("0件なら0円", () => {
+    expect(calcTotals([])).toEqual({ monthly: 0, yearly: 0, count: 0 });
+  });
 });
