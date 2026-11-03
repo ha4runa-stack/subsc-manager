@@ -6,11 +6,50 @@
 import { refresh } from "next/cache";
 import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
+import { getTodayInTokyo } from "@/lib/dates";
 import {
   validateSubscription,
   type SubscriptionFormErrors,
   type SubscriptionFormValues,
 } from "@/lib/validation";
+import type { SubscriptionStatus } from "@/types/subscription";
+
+// ---------------------------------------------------------------------
+// 契約状況の切り替え（契約中 ⇔ 解約済み）
+//   解約済みにする → 解約日に「今日（日本時間）」を記録
+//   契約中に戻す   → 解約日を空にする
+// ---------------------------------------------------------------------
+export async function changeSubscriptionStatus(
+  id: string,
+  status: SubscriptionStatus,
+): Promise<void> {
+  // 決められた値以外は受け付けない（画面を通さずに呼ばれても安全なように）
+  if (status !== "active" && status !== "cancelled") {
+    throw new Error("契約状況の値が正しくありません。");
+  }
+
+  const supabase = await createClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+  if (!user) {
+    redirect("/login");
+  }
+
+  const { error } = await supabase
+    .from("subscriptions")
+    .update({
+      status,
+      cancelled_at: status === "cancelled" ? getTodayInTokyo() : null,
+    })
+    .eq("id", id);
+
+  if (error) {
+    throw new Error("更新に失敗しました。時間をおいてもう一度お試しください。");
+  }
+
+  refresh();
+}
 
 // フォームに返す結果の形
 export type SubscriptionFormState = {
