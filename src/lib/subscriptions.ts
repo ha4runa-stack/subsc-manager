@@ -9,13 +9,15 @@ import "server-only";
 import { createClient } from "@/lib/supabase/server";
 import type { Subscription } from "@/types/subscription";
 
-// 自分のサブスクを全件取得する（新しく登録した順）
+// 自分のサブスクを全件取得する
+// 並び順：次回請求日が近い順 → 請求日が未設定のものは最後（その中は新しく登録した順）
 export async function getSubscriptions(): Promise<Subscription[]> {
   const supabase = await createClient();
 
   const { data, error } = await supabase
     .from("subscriptions")
     .select("*")
+    .order("next_billing_date", { ascending: true, nullsFirst: false })
     .order("created_at", { ascending: false });
 
   if (error) {
