@@ -63,3 +63,23 @@ export function calcTotals(subscriptions: TotalInfo[]): Totals {
 
   return { monthly, yearly, count: active.length };
 }
+
+// ---------------------------------------------------------------------
+// 未使用サブスク
+// ---------------------------------------------------------------------
+
+// 「使っていない」かつ「契約中」のサブスクだけを取り出す
+//   （解約済みはもう支払っていないので、節約の対象にならない）
+//
+// <T extends ...> は「必要な項目さえ持っていれば、どんな型でも受け取れる」という書き方。
+// 渡したデータ（Subscription など）を、そのままの型で返せる。
+//
+// 未使用サブスクの金額は、この結果を calcTotals に渡せば同じルールで計算できる：
+//   calcTotals(getUnusedSubscriptions(subscriptions))
+export function getUnusedSubscriptions<
+  T extends Pick<Subscription, "usage_status" | "status">,
+>(subscriptions: T[]): T[] {
+  return subscriptions.filter(
+    (s) => s.usage_status === "unused" && s.status === "active",
+  );
+}
