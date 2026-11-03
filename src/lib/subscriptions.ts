@@ -25,3 +25,34 @@ export async function getSubscriptions(): Promise<Subscription[]> {
 
   return data as Subscription[];
 }
+
+// IDを指定して1件取得する（見つからなければ null）
+export async function getSubscription(
+  id: string,
+): Promise<Subscription | null> {
+  // IDの形（UUID）が正しくなければ、問い合わせずに「見つからない」とする
+  if (!isUuid(id)) {
+    return null;
+  }
+
+  const supabase = await createClient();
+  const { data, error } = await supabase
+    .from("subscriptions")
+    .select("*")
+    .eq("id", id)
+    .maybeSingle(); // 0件なら null、1件ならそのデータ
+
+  if (error) {
+    throw new Error(`サブスクの読み込みに失敗しました: ${error.message}`);
+  }
+
+  // 他の人のデータは RLS により取得できないので、ここでも null になる
+  return data as Subscription | null;
+}
+
+// UUID（例：1b4e28ba-2fa1-11d2-883f-0016d3cca427）の形かどうか
+export function isUuid(text: string): boolean {
+  return /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(
+    text,
+  );
+}
