@@ -73,7 +73,7 @@
 #### フェーズ3: 計算ロジック（`src/lib/calculations.ts`）
 - [x] **3-1 Vitestの導入**
   - テスト: `npm test` でサンプルテストが通る
-- [ ] **3-2 1件ごとの計算** — `toMonthlyAmount` / `toYearlyAmount`
+- [x] **3-2 1件ごとの計算** — `toMonthlyAmount` / `toYearlyAmount`
   - テスト（自動）:
 
     | 契約周期 | 料金 | 月額換算 | 年間支出 |
