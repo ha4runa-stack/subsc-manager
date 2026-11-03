@@ -35,7 +35,7 @@
   - テスト: `node -v` と `git --version` でバージョンが表示される
 - [x] **0-2 Next.jsプロジェクト作成** — TypeScript、Tailwind CSS、App Router、`src/` ディレクトリ
   - テスト: `npm run dev` → http://localhost:3000 で画面が表示される
-- [ ] **0-3 GitHubへのpushとVercelでの公開**
+- [x] **0-3 GitHubへのpushとVercelでの公開**
   - テスト: VercelのURLで画面が表示される
 
 #### フェーズ1: 基盤（Supabase・ログイン）
