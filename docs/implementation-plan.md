@@ -148,18 +148,22 @@
 sabusuku/
 ├─ src/
 │  ├─ app/                          画面（URLと対応）
-│  │  ├─ layout.tsx
+│  │  ├─ layout.tsx                 アプリ全体のレイアウト
 │  │  ├─ page.tsx                   /dashboard へ移動
-│  │  ├─ login/page.tsx
-│  │  ├─ signup/page.tsx
-│  │  ├─ dashboard/page.tsx
-│  │  └─ subscriptions/
-│  │     ├─ page.tsx                一覧
-│  │     ├─ new/page.tsx            新規登録
-│  │     ├─ [id]/edit/page.tsx      編集
-│  │     └─ actions.ts              登録・更新・削除の処理
+│  │  ├─ login/page.tsx             （ヘッダーなし）
+│  │  ├─ signup/page.tsx            （ヘッダーなし）
+│  │  ├─ auth/                      ログイン処理・確認メールの戻り先
+│  │  └─ (main)/                    ログイン後の画面（URLには含まれない）
+│  │     ├─ layout.tsx              ヘッダー付きレイアウト
+│  │     ├─ dashboard/page.tsx
+│  │     └─ subscriptions/
+│  │        ├─ page.tsx             一覧
+│  │        ├─ new/page.tsx         新規登録
+│  │        ├─ [id]/edit/page.tsx   編集
+│  │        └─ actions.ts           登録・更新・削除の処理
 │  ├─ components/                   画面の部品
-│  │  ├─ layout/Header.tsx
+│  │  ├─ auth/                      LoginForm, SignupForm
+│  │  ├─ layout/                    Header, NavLinks
 │  │  ├─ ui/                        Button, Input, Card など
 │  │  ├─ subscriptions/             SubscriptionForm, SubscriptionList, DeleteButton
 │  │  └─ dashboard/                 SummaryCards, UnusedSection
