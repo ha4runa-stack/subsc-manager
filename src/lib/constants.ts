@@ -42,7 +42,8 @@ export const STATUS_LABELS: Record<SubscriptionStatus, string> = {
   cancelled: "解約済み",
 };
 
-// カテゴリーの選択肢（選択欄は V1.0 で作る）
+// カテゴリーの選択肢
+// （as const：中身を変更しない決まった値のリストとして扱う）
 export const CATEGORIES = [
   "動画",
   "音楽",
@@ -53,3 +54,6 @@ export const CATEGORIES = [
   "クラウド",
   "その他",
 ] as const;
+
+// カテゴリーが選ばれていないときの表示名
+export const UNCATEGORIZED_LABEL = "未分類";

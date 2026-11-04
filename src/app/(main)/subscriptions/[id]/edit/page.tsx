@@ -56,6 +56,7 @@ async function EditForm({ params }: { params: Promise<{ id: string }> }) {
 function toFormValues(subscription: Subscription): SubscriptionFormValues {
   return {
     name: subscription.name,
+    category: subscription.category ?? "", // null（未分類）なら空にする
     price: String(subscription.price),
     billing_cycle: subscription.billing_cycle,
     next_billing_date: subscription.next_billing_date ?? "",
