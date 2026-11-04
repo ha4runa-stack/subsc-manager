@@ -5,7 +5,9 @@ import Link from "next/link";
 import { Suspense } from "react";
 import { SubscriptionList } from "@/components/subscriptions/SubscriptionList";
 
-export default function SubscriptionsPage() {
+export default function SubscriptionsPage({
+  searchParams,
+}: PageProps<"/subscriptions">) {
   return (
     <>
       <div className="mb-4 flex items-center justify-between gap-2">
@@ -19,7 +21,8 @@ export default function SubscriptionsPage() {
       </div>
       {/* データの読み込み中は「読み込み中…」を表示する */}
       <Suspense fallback={<p className="text-gray-500">読み込み中…</p>}>
-        <SubscriptionList />
+        {/* searchParams：URL の ? より後ろの部分（例：?usage=unused） */}
+        <SubscriptionList searchParams={searchParams} />
       </Suspense>
     </>
   );

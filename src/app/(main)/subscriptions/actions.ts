@@ -12,7 +12,8 @@ import {
   type SubscriptionFormErrors,
   type SubscriptionFormValues,
 } from "@/lib/validation";
-import type { SubscriptionStatus } from "@/types/subscription";
+import { isUsageStatus } from "@/lib/usage-status";
+import type { SubscriptionStatus, UsageStatus } from "@/types/subscription";
 
 // ---------------------------------------------------------------------
 // 契約状況の切り替え（契約中 ⇔ 解約済み）
@@ -42,6 +43,39 @@ export async function changeSubscriptionStatus(
       status,
       cancelled_at: status === "cancelled" ? getTodayInTokyo() : null,
     })
+    .eq("id", id);
+
+  if (error) {
+    throw new Error("更新に失敗しました。時間をおいてもう一度お試しください。");
+  }
+
+  refresh();
+}
+
+// ---------------------------------------------------------------------
+// 利用状況の切り替え（一覧のボタンから呼ぶ）
+// ---------------------------------------------------------------------
+export async function changeUsageStatus(
+  id: string,
+  usageStatus: UsageStatus,
+): Promise<void> {
+  // 決められた値以外は受け付けない（画面を通さずに呼ばれても安全なように）
+  if (!isUsageStatus(usageStatus)) {
+    throw new Error("利用状況の値が正しくありません。");
+  }
+
+  const supabase = await createClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+  if (!user) {
+    redirect("/login");
+  }
+
+  // RLS により、自分のデータしか更新できない
+  const { error } = await supabase
+    .from("subscriptions")
+    .update({ usage_status: usageStatus })
     .eq("id", id);
 
   if (error) {
