@@ -1,36 +1,100 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# サブスクマネージャー
 
-## Getting Started
+複数のサブスクリプションをまとめて管理し、月額・年間の支出と「使っていないサービス」をひと目で確認できるWebアプリです。
 
-First, run the development server:
+固定費を見直すきっかけを作ることを目的に、要件定義から設計・実装・テスト・公開までの開発工程を学びながら制作しました。
 
-```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
-```
+**公開URL:** https://subsc-manager.vercel.app
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+## 主な機能
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+- **ログイン:** メールアドレスとパスワードで登録・ログインできます。データはユーザーごとに分離しています。
+- **サブスク管理:** サービス名、料金、契約周期、次回請求日、利用状況、メモを登録・編集・削除できます。
+- **請求日の管理:** 次回請求日が近い順に並べ、日付が過ぎたものには注意を表示します（日付の更新は手動です）。
+- **解約済みの管理:** 契約中と解約済みを切り替えられます。解約日を記録し、一覧を分けて表示します。
+- **支出の自動計算:** 月額換算額と年間支出額を計算します。
+- **ダッシュボード:** 月額合計、年間合計、契約数と、使っていないサブスクを解約した場合の節約額を表示します。
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+実際の決済や解約の処理、外部サービスとの連携は行いません。サブスクの情報は手動で登録します。
 
-## Learn More
+## 使用技術
 
-To learn more about Next.js, take a look at the following resources:
+| 分類 | 技術 |
+|---|---|
+| フレームワーク | Next.js 16（App Router、Server Actions） |
+| 言語 | TypeScript |
+| CSS | Tailwind CSS |
+| データベース・認証 | Supabase（PostgreSQL、Auth、RLS） |
+| テスト | Vitest |
+| デプロイ | Vercel |
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+## 工夫した点
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+### 一覧と合計の金額が必ず一致する計算ルール
 
-## Deploy on Vercel
+年額契約の月額換算では小数が出ます。合計してから四捨五入すると、一覧の金額を足した値と合計がずれることがあるため、**1件ごとに四捨五入してから合計**しています。計算は画面から切り離して `src/lib/calculations.ts` にまとめ、自動テストで確認しています。
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+| 契約周期 | 料金 | 月額換算額 | 年間支出額 |
+|---|---|---|---|
+| 月額 | ¥980 | ¥980 | ¥11,760 |
+| 年額 | ¥5,900 | ¥492 | ¥5,900 |
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+解約済みのサービスは支出の合計に含めません。
+
+### データベース側でのアクセス制御
+
+SupabaseのRLS（Row Level Security）で、参照・追加・更新・削除のすべてを「自分のデータだけ」に制限しています。画面の制御だけに頼らず、データベース側でも守る構成です。2つのアカウントで、互いのデータが見えないことを確認しました。
+
+### スマートフォンでの使いやすさ
+
+320pxから1280pxまでの幅で表示を確認し、日本語のリンクが途中で改行される問題や、長いサービス名による横へのはみ出しを修正しました。
+
+## 既知の制限
+
+- 確認メールは英語で届きます。また、Supabase標準のメール送信を使っているため、届かない場合があります。
+- 確認メールのリンクを登録時と別の端末で開くと案内画面が表示されますが、そのままログインできます。
+
+一般公開の前に、独自のメール送信（カスタムSMTP）を設定して解消する予定です。
+
+## ローカルでの動かし方
+
+Node.jsと、Supabaseのプロジェクトが必要です。
+
+1. パッケージをインストールします。
+
+   ```bash
+   npm install
+   ```
+
+2. プロジェクトの直下に `.env.local` を作り、Supabaseの値を設定します。
+
+   ```
+   NEXT_PUBLIC_SUPABASE_URL=SupabaseのプロジェクトURL
+   NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY=Supabaseの公開用キー
+   ```
+
+3. SupabaseのSQL Editorで `supabase/migrations/` のSQLを実行します。
+
+4. 開発サーバーを起動し、http://localhost:3000 を開きます。
+
+   ```bash
+   npm run dev
+   ```
+
+### よく使うコマンド
+
+| コマンド | 内容 |
+|---|---|
+| `npm run dev` | 開発サーバーを起動する |
+| `npm test` | 自動テストを実行する |
+| `npm run lint` | コードの書き方をチェックする |
+| `npm run build` | 本番用にビルドする |
+
+## 今後の予定
+
+- カテゴリーの選択
+- 一覧からの利用状況の切り替えと絞り込み
+- カテゴリー別・利用状況別のグラフ表示
+- 見直し候補の表示
+
+詳しい実装順は [実装計画](docs/implementation-plan.md) にまとめています。
