@@ -1,41 +1,29 @@
 // =====================================================================
 // ダッシュボード（/dashboard）
-// 【今は仮の内容】ログイン中のメールアドレスだけを表示する。
-// 中身はフェーズ4で作る。
+// 支出の状況をひと目で確認する画面。
+//   ・サマリーカード（月額合計・年間合計・契約数）
+// ※ ログインしていない人は proxy.ts がログイン画面へ移動させる。
 // =====================================================================
 import { Suspense } from "react";
-import { redirect } from "next/navigation";
-import { createClient } from "@/lib/supabase/server";
+import { SummaryCards } from "@/components/dashboard/SummaryCards";
+import { getSubscriptions } from "@/lib/subscriptions";
 
 export default function DashboardPage() {
   return (
     <>
       <h1 className="mb-4 text-2xl font-bold">ダッシュボード</h1>
-      {/* ログイン情報（Cookie）を読む部分は Suspense で囲む */}
+      {/* データの読み込み中は「読み込み中…」を表示する */}
       <Suspense fallback={<p className="text-gray-500">読み込み中…</p>}>
-        <CurrentUser />
+        <DashboardContent />
       </Suspense>
     </>
   );
 }
 
-async function CurrentUser() {
-  const supabase = await createClient();
-  // getUser()：Supabase に問い合わせて、本当にログインしているかを確認する
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
+// データを1回だけ読み込んで、2つの部品に同じものを渡す
+// （部品ごとに読み込むと、データベースへの問い合わせが2回になってしまう）
+async function DashboardContent() {
+  const subscriptions = await getSubscriptions();
 
-  // ログインしていなければログイン画面へ
-  if (!user) {
-    redirect("/login");
-  }
-
-  return (
-    <div className="rounded-xl bg-white p-6 shadow-sm">
-      <p>
-        <span className="font-medium">{user.email}</span> でログイン中です。
-      </p>
-    </div>
-  );
+  return <SummaryCards subscriptions={subscriptions} />;
 }
