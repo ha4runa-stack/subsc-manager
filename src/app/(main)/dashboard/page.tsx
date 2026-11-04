@@ -2,10 +2,12 @@
 // ダッシュボード（/dashboard）
 // 支出の状況をひと目で確認する画面。
 //   ・サマリーカード（月額合計・年間合計・契約数）
+//   ・未使用サブスクのセクション（年間◯円の節約）
 // ※ ログインしていない人は proxy.ts がログイン画面へ移動させる。
 // =====================================================================
 import { Suspense } from "react";
 import { SummaryCards } from "@/components/dashboard/SummaryCards";
+import { UnusedSection } from "@/components/dashboard/UnusedSection";
 import { getSubscriptions } from "@/lib/subscriptions";
 
 export default function DashboardPage() {
@@ -25,5 +27,10 @@ export default function DashboardPage() {
 async function DashboardContent() {
   const subscriptions = await getSubscriptions();
 
-  return <SummaryCards subscriptions={subscriptions} />;
+  return (
+    <>
+      <SummaryCards subscriptions={subscriptions} />
+      <UnusedSection subscriptions={subscriptions} />
+    </>
+  );
 }
