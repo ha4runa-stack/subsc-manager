@@ -15,7 +15,8 @@ export function Header() {
           サブスクマネージャー
         </Link>
 
-        <div className="flex items-center gap-1 sm:gap-3">
+        {/* flex-wrap：とても狭い画面で入りきらないときは、ボタンごと次の行へ送る */}
+        <div className="flex flex-wrap items-center gap-1 sm:gap-3">
           {/* NavLinks は URL を読むので Suspense で囲む（URL はアクセス時に決まるため） */}
           <Suspense fallback={<NavLinksPlaceholder />}>
             <NavLinks />
@@ -23,7 +24,7 @@ export function Header() {
           <form action={logout}>
             <button
               type="submit"
-              className="rounded-lg px-3 py-2 text-sm text-gray-600 hover:bg-gray-100"
+              className="rounded-lg px-2 py-2 text-sm whitespace-nowrap text-gray-600 hover:bg-gray-100 sm:px-3"
             >
               ログアウト
             </button>

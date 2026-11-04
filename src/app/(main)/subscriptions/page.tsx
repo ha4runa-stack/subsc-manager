@@ -12,7 +12,7 @@ export default function SubscriptionsPage() {
         <h1 className="text-2xl font-bold">サブスク一覧</h1>
         <Link
           href="/subscriptions/new"
-          className="rounded-lg bg-blue-600 px-4 py-2 font-medium text-white hover:bg-blue-700"
+          className="shrink-0 rounded-lg bg-blue-600 px-4 py-2 font-medium whitespace-nowrap text-white hover:bg-blue-700"
         >
           ＋ 登録する
         </Link>

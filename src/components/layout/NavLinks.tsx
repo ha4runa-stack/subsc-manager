@@ -41,10 +41,12 @@ function NavLinksView({ pathname }: { pathname: string | null }) {
             key={link.href}
             href={link.href}
             aria-current={isActive ? "page" : undefined}
+            // whitespace-nowrap：リンクの文字を途中で改行しない
+            // px-2 sm:px-3：スマホでは左右の余白を少し狭くして、横に収まりやすくする
             className={
               isActive
-                ? "rounded-lg bg-blue-50 px-3 py-2 text-sm font-medium text-blue-700"
-                : "rounded-lg px-3 py-2 text-sm text-gray-700 hover:bg-gray-100"
+                ? "rounded-lg bg-blue-50 px-2 py-2 text-sm font-medium whitespace-nowrap text-blue-700 sm:px-3"
+                : "rounded-lg px-2 py-2 text-sm whitespace-nowrap text-gray-700 hover:bg-gray-100 sm:px-3"
             }
           >
             {link.label}
