@@ -3,6 +3,8 @@
 // =====================================================================
 import { describe, expect, it } from "vitest";
 import {
+  calcSpendingByCategory,
+  calcSpendingByUsage,
   calcTotals,
   getUnusedSubscriptions,
   toMonthlyAmount,
@@ -15,6 +17,71 @@ type TestSubscription = Pick<
   Subscription,
   "name" | "price" | "billing_cycle" | "usage_status" | "status"
 >;
+
+// 6-3：支出の内訳（グラフ用）
+describe("calcSpendingByCategory / calcSpendingByUsage", () => {
+  const active = { status: "active", billing_cycle: "monthly" } as const;
+  const list = [
+    { ...active, price: 1000, category: "動画", usage_status: "often" },
+    { ...active, price: 500, category: "動画", usage_status: "unused" },
+    { ...active, price: 2000, category: "音楽", usage_status: "often" },
+    { ...active, price: 300, category: null, usage_status: "sometimes" },
+    // 年額 5,900 円 → 月額換算 492 円
+    {
+      status: "active",
+      billing_cycle: "yearly",
+      price: 5900,
+      category: "仕事",
+      usage_status: "often",
+    },
+    // 解約済みは含めない
+    {
+      status: "cancelled",
+      billing_cycle: "monthly",
+      price: 9999,
+      category: "ゲーム",
+      usage_status: "unused",
+    },
+  ] satisfies Parameters<typeof calcSpendingByCategory>[0] &
+    Parameters<typeof calcSpendingByUsage>[0];
+
+  it("カテゴリー別：金額の大きい順に並び、空のカテゴリーは未分類にまとめる", () => {
+    expect(calcSpendingByCategory(list)).toEqual([
+      { label: "音楽", monthly: 2000 },
+      { label: "動画", monthly: 1500 },
+      { label: "仕事", monthly: 492 },
+      { label: "未分類", monthly: 300 },
+    ]);
+  });
+
+  it("利用状況別：決まった順に並ぶ", () => {
+    expect(calcSpendingByUsage(list)).toEqual([
+      { label: "よく使う", monthly: 3492 },
+      { label: "たまに使う", monthly: 300 },
+      { label: "使っていない", monthly: 500 },
+    ]);
+  });
+
+  it("どちらの内訳を足しても、合計（calcTotals）と一致する", () => {
+    const sum = (rows: { monthly: number }[]) =>
+      rows.reduce((total, row) => total + row.monthly, 0);
+    const { monthly } = calcTotals(list);
+    expect(sum(calcSpendingByCategory(list))).toBe(monthly);
+    expect(sum(calcSpendingByUsage(list))).toBe(monthly);
+  });
+
+  it("利用状況別は、該当がなくても0円の行を残す", () => {
+    expect(calcSpendingByUsage([])).toEqual([
+      { label: "よく使う", monthly: 0 },
+      { label: "たまに使う", monthly: 0 },
+      { label: "使っていない", monthly: 0 },
+    ]);
+  });
+
+  it("カテゴリー別は、0件なら行がない", () => {
+    expect(calcSpendingByCategory([])).toEqual([]);
+  });
+});
 
 // 3-2：1件ごとの計算
 // 実装計画の表と同じ値を確かめる。

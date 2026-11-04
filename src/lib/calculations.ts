@@ -9,6 +9,8 @@
 // 画面やデータベースとは関係のない「ただの計算」だけを置いているので、
 // 自動テスト（calculations.test.ts）で確かめやすい。
 // =====================================================================
+import { UNCATEGORIZED_LABEL, USAGE_STATUS_LABELS } from "@/lib/constants";
+import { USAGE_STATUSES } from "@/lib/usage-status";
 import type { Subscription } from "@/types/subscription";
 
 // 計算に必要な項目だけを取り出した型
@@ -62,6 +64,53 @@ export function calcTotals(subscriptions: TotalInfo[]): Totals {
   }
 
   return { monthly, yearly, count: active.length };
+}
+
+// ---------------------------------------------------------------------
+// 支出の内訳（グラフ用）
+//   calcTotals を使うので、合計と同じルールで計算される
+//   （解約済みは含めない・1件ずつ四捨五入してから足す）
+// ---------------------------------------------------------------------
+
+// グラフの1行分
+export type SpendingRow = {
+  label: string; // 表示名（例：動画）
+  monthly: number; // 月額換算額の合計（円）
+};
+
+// カテゴリー別の月額換算額（金額の大きい順）
+// 登録のあるカテゴリーだけが並ぶ。カテゴリーが空のものは「未分類」にまとめる
+export function calcSpendingByCategory(
+  subscriptions: (TotalInfo & Pick<Subscription, "category">)[],
+): SpendingRow[] {
+  const active = subscriptions.filter((s) => s.status === "active");
+
+  // new Set … 重なりをなくす（同じカテゴリーを1つにまとめる）
+  const labels = new Set(active.map((s) => s.category ?? UNCATEGORIZED_LABEL));
+
+  const rows = [...labels].map((label) => ({
+    label,
+    monthly: calcTotals(
+      active.filter((s) => (s.category ?? UNCATEGORIZED_LABEL) === label),
+    ).monthly,
+  }));
+
+  // 金額の大きい順。同じ金額なら名前の順にして、並びが毎回変わらないようにする
+  return rows.sort(
+    (a, b) => b.monthly - a.monthly || a.label.localeCompare(b.label, "ja"),
+  );
+}
+
+// 利用状況別の月額換算額（よく使う → たまに使う → 使っていない の順）
+// 0円でも行を残す（「使っていない ¥0」も大事な情報なので）
+export function calcSpendingByUsage(
+  subscriptions: (TotalInfo & Pick<Subscription, "usage_status">)[],
+): SpendingRow[] {
+  return USAGE_STATUSES.map((status) => ({
+    label: USAGE_STATUS_LABELS[status],
+    monthly: calcTotals(subscriptions.filter((s) => s.usage_status === status))
+      .monthly,
+  }));
 }
 
 // ---------------------------------------------------------------------
