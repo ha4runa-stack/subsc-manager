@@ -158,7 +158,9 @@ function CancelledCard({ subscription }: { subscription: Subscription }) {
 function CardHeader({ subscription }: { subscription: Subscription }) {
   return (
     <div className="flex flex-wrap items-start justify-between gap-2">
-      <div>
+      {/* min-w-0 と break-words：スペースのない長い名前でも途中で折り返し、
+          画面からはみ出さないようにする */}
+      <div className="min-w-0 break-words">
         <p className="text-lg font-bold">{subscription.name}</p>
         <span
           className={`mt-1 inline-block rounded-full px-2 py-0.5 text-xs font-medium ${
@@ -168,8 +170,9 @@ function CardHeader({ subscription }: { subscription: Subscription }) {
           {USAGE_STATUS_LABELS[subscription.usage_status]}
         </span>
       </div>
-      {/* 料金（大きく）と、計算した月額換算額・年間支出額（小さく） */}
-      <div className="text-right">
+      {/* 料金（大きく）と、計算した月額換算額・年間支出額（小さく）
+          ml-auto：名前が長くて次の行に送られたときも、右端にそろえる */}
+      <div className="ml-auto text-right">
         <p className="text-lg font-bold">
           {formatYen(subscription.price)}
           <span className="text-sm font-normal text-gray-500">

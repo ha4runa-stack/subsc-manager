@@ -58,7 +58,10 @@ function Card({
   return (
     <div className="rounded-xl bg-white p-5 shadow-sm">
       <p className="text-sm font-medium text-gray-500">{label}</p>
-      <p className="mt-1 text-3xl font-bold">{value}</p>
+      {/* 3列に並び始める幅（sm）はカードが狭いので、文字を一段小さくする */}
+      <p className="mt-1 text-3xl font-bold break-words sm:text-2xl md:text-3xl">
+        {value}
+      </p>
       <p className="mt-1 text-xs text-gray-500">{note}</p>
     </div>
   );
