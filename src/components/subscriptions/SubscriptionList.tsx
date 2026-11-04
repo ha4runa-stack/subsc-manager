@@ -17,6 +17,7 @@ import {
 } from "@/lib/dates";
 import {
   BILLING_CYCLE_UNITS,
+  UNCATEGORIZED_LABEL,
   USAGE_STATUS_LABELS,
   USAGE_STATUS_STYLES,
 } from "@/lib/constants";
@@ -162,13 +163,19 @@ function CardHeader({ subscription }: { subscription: Subscription }) {
           画面からはみ出さないようにする */}
       <div className="min-w-0 break-words">
         <p className="text-lg font-bold">{subscription.name}</p>
-        <span
-          className={`mt-1 inline-block rounded-full px-2 py-0.5 text-xs font-medium ${
-            USAGE_STATUS_STYLES[subscription.usage_status]
-          }`}
-        >
-          {USAGE_STATUS_LABELS[subscription.usage_status]}
-        </span>
+        <div className="mt-1 flex flex-wrap gap-1">
+          <span className="rounded-full bg-gray-100 px-2 py-0.5 text-xs font-medium text-gray-700">
+            {/* ?? ：左が null なら右の値を使う */}
+            {subscription.category ?? UNCATEGORIZED_LABEL}
+          </span>
+          <span
+            className={`rounded-full px-2 py-0.5 text-xs font-medium ${
+              USAGE_STATUS_STYLES[subscription.usage_status]
+            }`}
+          >
+            {USAGE_STATUS_LABELS[subscription.usage_status]}
+          </span>
+        </div>
       </div>
       {/* 料金（大きく）と、計算した月額換算額・年間支出額（小さく）
           ml-auto：名前が長くて次の行に送られたときも、右端にそろえる */}

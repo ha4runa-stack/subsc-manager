@@ -10,11 +10,13 @@
 // この関数は画面やデータベースに触れない「純粋関数」なので、
 // 自動テスト（フェーズ3で導入する Vitest）で確かめやすい。
 // =====================================================================
+import { CATEGORIES } from "@/lib/constants";
 import type { BillingCycle, UsageStatus } from "@/types/subscription";
 
 // フォームの入力値（すべて文字列）
 export type SubscriptionFormValues = {
   name: string;
+  category: string; // 空文字 = 未分類
   price: string;
   billing_cycle: string;
   next_billing_date: string;
@@ -25,6 +27,7 @@ export type SubscriptionFormValues = {
 // 入力チェックを通ったあとの、保存できる形のデータ
 export type SubscriptionInput = {
   name: string;
+  category: string | null;
   price: number;
   billing_cycle: BillingCycle;
   next_billing_date: string | null;
@@ -57,6 +60,13 @@ export function validateSubscription(
     errors.name = "サービス名を入力してください。";
   } else if (name.length > 100) {
     errors.name = "サービス名は100文字以内で入力してください。";
+  }
+
+  // --- カテゴリー（空でもOK） ---
+  // 画面を通さずに送られても、決められた選択肢以外は保存しない
+  const category = values.category.trim();
+  if (category && !(CATEGORIES as readonly string[]).includes(category)) {
+    errors.category = "カテゴリーを選び直してください。";
   }
 
   // --- 料金 ---
@@ -104,6 +114,7 @@ export function validateSubscription(
     success: true,
     data: {
       name,
+      category: category || null, // 空なら null（未分類）
       price,
       billing_cycle: values.billing_cycle as BillingCycle,
       next_billing_date: nextBillingDate || null, // 空なら null

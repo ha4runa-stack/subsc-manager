@@ -14,6 +14,7 @@ export default function NewSubscriptionPage() {
         // 最初は空。よく使う選択肢（月額・よく使う）を選んだ状態にしておく
         initialValues={{
           name: "",
+          category: "",
           price: "",
           billing_cycle: "monthly",
           next_billing_date: "",

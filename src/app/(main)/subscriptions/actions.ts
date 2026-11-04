@@ -66,6 +66,7 @@ function readForm(formData: FormData): SubscriptionFormValues {
   };
   return {
     name: get("name"),
+    category: get("category"),
     price: get("price"),
     billing_cycle: get("billing_cycle"),
     next_billing_date: get("next_billing_date"),

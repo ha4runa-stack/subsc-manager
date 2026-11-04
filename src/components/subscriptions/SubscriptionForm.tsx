@@ -13,7 +13,12 @@ import Link from "next/link";
 import { useActionState } from "react";
 import type { SubscriptionFormState } from "@/app/(main)/subscriptions/actions";
 import type { SubscriptionFormValues } from "@/lib/validation";
-import { BILLING_CYCLE_LABELS, USAGE_STATUS_LABELS } from "@/lib/constants";
+import {
+  BILLING_CYCLE_LABELS,
+  CATEGORIES,
+  UNCATEGORIZED_LABEL,
+  USAGE_STATUS_LABELS,
+} from "@/lib/constants";
 import type { BillingCycle, UsageStatus } from "@/types/subscription";
 
 type Props = {
@@ -63,6 +68,26 @@ export function SubscriptionForm({ action, initialValues, submitLabel }: Props) 
           maxLength={100}
           className={inputClass(errors.name)}
         />
+      </Field>
+
+      {/* カテゴリー（選ばなければ「未分類」） */}
+      <Field label="カテゴリー" htmlFor="category" error={errors.category}>
+        <select
+          // key：値が変わったら選択欄を作り直す。
+          // 入力エラーで戻ってきたときも、選んだカテゴリーを残すため
+          key={values.category}
+          id="category"
+          name="category"
+          defaultValue={values.category}
+          className={`${inputClass(errors.category)} bg-white`}
+        >
+          <option value="">{UNCATEGORIZED_LABEL}</option>
+          {CATEGORIES.map((category) => (
+            <option key={category} value={category}>
+              {category}
+            </option>
+          ))}
+        </select>
       </Field>
 
       {/* 料金 */}
