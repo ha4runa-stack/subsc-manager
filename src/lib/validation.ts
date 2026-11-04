@@ -11,6 +11,7 @@
 // 自動テスト（フェーズ3で導入する Vitest）で確かめやすい。
 // =====================================================================
 import { CATEGORIES } from "@/lib/constants";
+import { isUsageStatus } from "@/lib/usage-status";
 import type { BillingCycle, UsageStatus } from "@/types/subscription";
 
 // フォームの入力値（すべて文字列）
@@ -47,7 +48,6 @@ export type ValidationResult =
 
 const MAX_PRICE = 10_000_000; // 料金の上限（1,000万円）
 const BILLING_CYCLES: BillingCycle[] = ["monthly", "yearly"];
-const USAGE_STATUSES: UsageStatus[] = ["often", "sometimes", "unused"];
 
 export function validateSubscription(
   values: SubscriptionFormValues,
@@ -95,7 +95,7 @@ export function validateSubscription(
   }
 
   // --- 利用状況 ---
-  if (!USAGE_STATUSES.includes(values.usage_status as UsageStatus)) {
+  if (!isUsageStatus(values.usage_status)) {
     errors.usage_status = "利用状況を選んでください。";
   }
 

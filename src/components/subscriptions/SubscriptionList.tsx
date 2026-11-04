@@ -8,6 +8,8 @@ import Link from "next/link";
 import { getSubscriptions } from "@/lib/subscriptions";
 import { DeleteButton } from "./DeleteButton";
 import { StatusToggleButton } from "./StatusToggleButton";
+import { UsageStatusButtons } from "./UsageStatusButtons";
+import { parseUsageFilter, USAGE_STATUSES } from "@/lib/usage-status";
 import { formatDate, formatYen } from "@/lib/format";
 import { toMonthlyAmount, toYearlyAmount } from "@/lib/calculations";
 import {
@@ -21,11 +23,18 @@ import {
   USAGE_STATUS_LABELS,
   USAGE_STATUS_STYLES,
 } from "@/lib/constants";
-import type { Subscription } from "@/types/subscription";
+import type { Subscription, UsageStatus } from "@/types/subscription";
 
-export async function SubscriptionList() {
+export async function SubscriptionList({
+  searchParams,
+}: {
+  searchParams: Promise<{ [key: string]: string | string[] | undefined }>;
+}) {
   const subscriptions = await getSubscriptions();
   const today = getTodayInTokyo(); // 日本時間の今日
+
+  // URL の ?usage=◯◯ から、絞り込みの条件を読み取る（なければ null）
+  const usageFilter = parseUsageFilter((await searchParams).usage);
 
   // 1件もないとき
   if (subscriptions.length === 0) {
@@ -41,20 +50,30 @@ export async function SubscriptionList() {
   const activeList = subscriptions.filter((s) => s.status === "active");
   const cancelledList = subscriptions.filter((s) => s.status === "cancelled");
 
+  // 絞り込みの条件に合う契約中のサブスク（条件がなければ全部）
+  const visibleActiveList = usageFilter
+    ? activeList.filter((s) => s.usage_status === usageFilter)
+    : activeList;
+
   return (
     <div className="space-y-8">
       {/* 契約中 */}
       <section>
+        {activeList.length > 0 && (
+          <UsageFilter current={usageFilter} activeList={activeList} />
+        )}
         <h2 className="mb-3 text-lg font-bold">
-          契約中（{activeList.length}件）
+          契約中（{visibleActiveList.length}件）
         </h2>
-        {activeList.length === 0 ? (
+        {visibleActiveList.length === 0 ? (
           <p className="rounded-xl bg-white p-6 text-center text-gray-600 shadow-sm">
-            契約中のサブスクはありません。
+            {usageFilter
+              ? `「${USAGE_STATUS_LABELS[usageFilter]}」のサブスクはありません。`
+              : "契約中のサブスクはありません。"}
           </p>
         ) : (
           <ul className="space-y-3">
-            {activeList.map((subscription) => (
+            {visibleActiveList.map((subscription) => (
               <ActiveCard
                 key={subscription.id}
                 subscription={subscription}
@@ -68,8 +87,8 @@ export async function SubscriptionList() {
         )}
       </section>
 
-      {/* 解約済み（1件以上あるときだけ表示） */}
-      {cancelledList.length > 0 && (
+      {/* 解約済み（1件以上あるときだけ表示。絞り込み中は契約中の見直しに集中できるよう隠す） */}
+      {!usageFilter && cancelledList.length > 0 && (
         <section>
           <h2 className="mb-3 text-lg font-bold text-gray-500">
             解約済み（{cancelledList.length}件）
@@ -82,6 +101,64 @@ export async function SubscriptionList() {
         </section>
       )}
     </div>
+  );
+}
+
+// ---------------------------------------------------------------------
+// 利用状況の絞り込み
+// 条件を URL に入れるので、再読み込みしても絞り込みが保たれる
+// ---------------------------------------------------------------------
+function UsageFilter({
+  current,
+  activeList,
+}: {
+  current: UsageStatus | null;
+  activeList: Subscription[];
+}) {
+  return (
+    <nav aria-label="利用状況で絞り込み" className="mb-4 flex flex-wrap gap-2">
+      <FilterLink
+        href="/subscriptions"
+        label="すべて"
+        count={activeList.length}
+        isSelected={current === null}
+      />
+      {USAGE_STATUSES.map((status) => (
+        <FilterLink
+          key={status}
+          href={`/subscriptions?usage=${status}`}
+          label={USAGE_STATUS_LABELS[status]}
+          count={activeList.filter((s) => s.usage_status === status).length}
+          isSelected={current === status}
+        />
+      ))}
+    </nav>
+  );
+}
+
+function FilterLink({
+  href,
+  label,
+  count,
+  isSelected,
+}: {
+  href: string;
+  label: string;
+  count: number;
+  isSelected: boolean;
+}) {
+  return (
+    <Link
+      href={href}
+      aria-current={isSelected ? "page" : undefined}
+      className={`rounded-full px-3 py-1.5 text-sm whitespace-nowrap ${
+        isSelected
+          ? "bg-blue-600 font-medium text-white"
+          : "bg-white text-gray-700 ring-1 ring-gray-200 ring-inset hover:bg-gray-100"
+      }`}
+    >
+      {label}（{count}）
+    </Link>
   );
 }
 
@@ -103,7 +180,16 @@ function ActiveCard({
         isOverdue ? "ring-2 ring-red-300" : ""
       }`}
     >
-      <CardHeader subscription={subscription} />
+      <CardHeader
+        subscription={subscription}
+        usage={
+          <UsageStatusButtons
+            id={subscription.id}
+            name={subscription.name}
+            usageStatus={subscription.usage_status}
+          />
+        }
+      />
 
       {/* 請求日が過ぎているときの注意 */}
       {isOverdue && (
@@ -136,7 +222,19 @@ function CancelledCard({ subscription }: { subscription: Subscription }) {
   return (
     <li className="rounded-xl bg-gray-100 p-4">
       <div className="opacity-60">
-        <CardHeader subscription={subscription} />
+        {/* 解約済みは切り替えられないので、利用状況は表示だけにする */}
+        <CardHeader
+          subscription={subscription}
+          usage={
+            <span
+              className={`rounded-full px-2 py-0.5 text-xs font-medium ${
+                USAGE_STATUS_STYLES[subscription.usage_status]
+              }`}
+            >
+              {USAGE_STATUS_LABELS[subscription.usage_status]}
+            </span>
+          }
+        />
       </div>
       <div className="mt-2 flex flex-wrap items-center justify-between gap-2">
         <p className="text-sm text-gray-500">
@@ -155,26 +253,27 @@ function CancelledCard({ subscription }: { subscription: Subscription }) {
 // カードの共通部品
 // ---------------------------------------------------------------------
 
-// 上段：サービス名・利用状況・料金
-function CardHeader({ subscription }: { subscription: Subscription }) {
+// 上段：サービス名・カテゴリー・利用状況・料金
+// usage：利用状況の表示（契約中は切り替えボタン、解約済みはラベル）
+function CardHeader({
+  subscription,
+  usage,
+}: {
+  subscription: Subscription;
+  usage: React.ReactNode;
+}) {
   return (
     <div className="flex flex-wrap items-start justify-between gap-2">
       {/* min-w-0 と break-words：スペースのない長い名前でも途中で折り返し、
           画面からはみ出さないようにする */}
       <div className="min-w-0 break-words">
         <p className="text-lg font-bold">{subscription.name}</p>
-        <div className="mt-1 flex flex-wrap gap-1">
+        <div className="mt-1 flex flex-wrap items-center gap-2">
           <span className="rounded-full bg-gray-100 px-2 py-0.5 text-xs font-medium text-gray-700">
             {/* ?? ：左が null なら右の値を使う */}
             {subscription.category ?? UNCATEGORIZED_LABEL}
           </span>
-          <span
-            className={`rounded-full px-2 py-0.5 text-xs font-medium ${
-              USAGE_STATUS_STYLES[subscription.usage_status]
-            }`}
-          >
-            {USAGE_STATUS_LABELS[subscription.usage_status]}
-          </span>
+          {usage}
         </div>
       </div>
       {/* 料金（大きく）と、計算した月額換算額・年間支出額（小さく）
